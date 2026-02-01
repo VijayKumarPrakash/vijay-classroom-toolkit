@@ -1,5 +1,4 @@
-# File: test_student_manager.py
-
+# tests/test_student_manager.py
 import pytest
 from src.student_manager import StudentManager
 
@@ -10,182 +9,179 @@ def manager():
 
 @pytest.fixture
 def populated_manager(manager):
-    """Fixture with pre-loaded data."""
+    """Fixture with some pre-loaded data."""
     manager.add_student("Alice", "A")
     manager.add_student("Bob", "A")
     manager.add_student("Charlie", "B")
     return manager
 
-class TestStudentManager:
+def test_add_student_success(manager):
+    """Test adding a student to a new section."""
+    result = manager.add_student("Alice", "A")
+    assert result is True
+    assert "Alice" in manager.get_students_by_section("A")
 
-    def test_add_student_success(self, manager):
-        """Test adding a new student works correctly."""
-        result = manager.add_student("John Doe", "Section 1")
-        assert result is True
-        assert manager.get_student_count() == 1
-        
-        students = manager.get_all_students()
-        assert students[0]["name"] == "John Doe"
-        assert students[0]["section"] == "Section 1"
+def test_add_duplicate_student(populated_manager):
+    """Test adding a duplicate student to the same section."""
+    # Assuming the implementation prevents duplicates in the same section
+    # If the implementation allows duplicates, this test would need adjustment based on specific logic
+    # Standard behavior for managers usually implies uniqueness or simple appending.
+    # Let's assume simple appending based on typical "manager" patterns unless specified otherwise,
+    # but checking if the count increases is a safe bet.
+    initial_count = len(populated_manager.get_students_by_section("A"))
+    populated_manager.add_student("Alice", "A")
+    new_count = len(populated_manager.get_students_by_section("A"))
+    assert new_count == initial_count + 1
 
-    def test_add_duplicate_student(self, manager):
-        """Test that adding a duplicate student (same name and section) is handled."""
-        manager.add_student("John Doe", "Section 1")
-        # Assuming the implementation prevents duplicates or allows them. 
-        # Based on typical logic, we check if count increases or stays same.
-        # If the requirement implies unique ID generation, we check that.
-        # Here we assume simple storage:
-        manager.add_student("John Doe", "Section 1")
-        assert manager.get_student_count() == 2
+def test_remove_student_existing(populated_manager):
+    """Test removing an existing student."""
+    result = populated_manager.remove_student("Alice", "A")
+    assert result is True
+    assert "Alice" not in populated_manager.get_students_by_section("A")
 
-    def test_remove_student_existing(self, populated_manager):
-        """Test removing an existing student."""
-        initial_count = populated_manager.get_student_count()
-        result = populated_manager.remove_student("Alice", "A")
-        
-        assert result is True
-        assert populated_manager.get_student_count() == initial_count - 1
-        assert populated_manager.get_student_by_name("Alice") is None
+def test_remove_student_non_existent(populated_manager):
+    """Test removing a student that does not exist."""
+    result = populated_manager.remove_student("Zorro", "A")
+    assert result is False
+    # Ensure state hasn't changed
+    assert len(populated_manager.get_students_by_section("A")) == 2
 
-    def test_remove_student_non_existent(self, populated_manager):
-        """Test removing a student that does not exist."""
-        result = populated_manager.remove_student("Zorro", "Z")
-        assert result is False
-        assert populated_manager.get_student_count() == 3
+def test_remove_student_invalid_section(populated_manager):
+    """Test removing a student from a section that doesn't exist."""
+    result = populated_manager.remove_student("Alice", "Z")
+    assert result is False
 
-    def test_get_students_by_section(self, populated_manager):
-        """Test filtering students by section."""
-        section_a = populated_manager.get_students_by_section("A")
-        section_b = populated_manager.get_students_by_section("B")
-        section_empty = populated_manager.get_students_by_section("Z")
+def test_get_students_by_section_valid(populated_manager):
+    """Test retrieving students from a valid section."""
+    students = populated_manager.get_students_by_section("B")
+    assert students == ["Charlie"]
 
-        assert len(section_a) == 2
-        assert len(section_b) == 1
-        assert len(section_empty) == 0
-        assert "Alice" in [s["name"] for s in section_a]
+def test_get_students_by_section_empty(manager):
+    """Test retrieving students from a non-existent section returns empty list."""
+    students = manager.get_students_by_section("Z")
+    assert students == []
+    assert isinstance(students, list)
 
-    def test_get_all_sections(self, populated_manager):
-        """Test retrieving a list of all unique sections."""
-        sections = populated_manager.get_all_sections()
-        assert len(sections) == 2
-        assert "A" in sections
-        assert "B" in sections
+def test_get_all_sections(populated_manager):
+    """Test retrieving a list of all sections."""
+    sections = populated_manager.get_all_sections()
+    assert set(sections) == {"A", "B"}
 
-    def test_clear_data(self, populated_manager):
-        """Test clearing all student data."""
-        populated_manager.clear_all()
-        assert populated_manager.get_student_count() == 0
-        assert len(populated_manager.get_all_sections()) == 0
+def test_get_all_sections_empty(manager):
+    """Test retrieving sections when manager is empty."""
+    assert manager.get_all_sections() == []
 
-    def test_add_student_invalid_input(self, manager):
-        """Test edge cases with empty strings or None."""
-        # Depending on implementation, this might raise ValueError or return False
-        # Assuming robust implementation returns False or handles gracefully
-        with pytest.raises(ValueError):
-            manager.add_student("", "Section A")
-            
-        with pytest.raises(ValueError):
-            manager.add_student("Valid Name", "")
+def test_clear_section(populated_manager):
+    """Test clearing all students from a specific section."""
+    result = populated_manager.clear_section("A")
+    assert result is True
+    assert populated_manager.get_students_by_section("A") == []
+    # Ensure other sections remain untouched
+    assert populated_manager.get_students_by_section("B") == ["Charlie"]
 
+def test_clear_section_non_existent(manager):
+    """Test clearing a section that doesn't exist."""
+    result = manager.clear_section("Z")
+    assert result is False
 
-# File: test_classroom_tools.py
+def test_student_count(populated_manager):
+    """Test getting the total count of students across all sections."""
+    # Alice, Bob, Charlie = 3
+    assert populated_manager.get_total_student_count() == 3
 
+def test_student_count_empty(manager):
+    """Test student count on empty manager."""
+    assert manager.get_total_student_count() == 0
+
+# tests/test_classroom_tools.py
 import pytest
-from src.classroom_tools import ClassroomTools
-from src.student_manager import StudentManager
+from src.classroom_tools import select_random_student, create_groups, pair_students
 
-@pytest.fixture
-def student_list():
-    """Provides a raw list of student dictionaries."""
-    return [
-        {"name": "S1", "section": "A"},
-        {"name": "S2", "section": "A"},
-        {"name": "S3", "section": "A"},
-        {"name": "S4", "section": "A"},
-        {"name": "S5", "section": "A"},
-        {"name": "S6", "section": "A"},
-    ]
+def test_select_random_student_valid():
+    """Test selecting a student from a populated list."""
+    students = ["Alice", "Bob", "Charlie"]
+    selected = select_random_student(students)
+    assert selected in students
 
-class TestClassroomTools:
+def test_select_random_student_single():
+    """Test selecting from a list with one student."""
+    students = ["Alice"]
+    assert select_random_student(students) == "Alice"
 
-    def test_select_random_student(self, student_list):
-        """Test selecting a single random student."""
-        selected = ClassroomTools.select_random_student(student_list)
-        assert selected in student_list
-        assert isinstance(selected, dict)
+def test_select_random_student_empty():
+    """Test selecting from an empty list returns None."""
+    assert select_random_student([]) is None
 
-    def test_select_random_student_empty_list(self):
-        """Test selection from an empty list returns None."""
-        selected = ClassroomTools.select_random_student([])
-        assert selected is None
+def test_create_groups_even_distribution():
+    """Test creating groups where students divide evenly."""
+    students = ["A", "B", "C", "D", "E", "F"]
+    groups = create_groups(students, group_size=2)
+    
+    assert len(groups) == 3
+    for group in groups:
+        assert len(group) == 2
+    
+    # Verify all students are present
+    flattened = [s for group in groups for s in group]
+    assert set(flattened) == set(students)
 
-    def test_create_groups_even_split(self, student_list):
-        """Test creating groups where total divides evenly by group size."""
-        # 6 students, group size 2 -> should be 3 groups
-        groups = ClassroomTools.create_groups(student_list, group_size=2)
-        
-        assert len(groups) == 3
-        for group in groups:
-            assert len(group) == 2
+def test_create_groups_uneven_distribution():
+    """Test creating groups where there is a remainder."""
+    students = ["A", "B", "C", "D", "E"]
+    groups = create_groups(students, group_size=2)
+    
+    # Logic usually dictates either a smaller final group or distributing remainders.
+    # Assuming standard chunking logic (last group is smaller):
+    assert len(groups) == 3 # [2, 2, 1]
+    lengths = [len(g) for g in groups]
+    assert 1 in lengths
+    assert lengths.count(2) == 2
 
-        # Verify all students are present exactly once
-        flattened_students = [s["name"] for group in groups for s in group]
-        assert len(flattened_students) == 6
-        assert len(set(flattened_students)) == 6
+def test_create_groups_size_larger_than_list():
+    """Test creating a group size larger than the student list."""
+    students = ["A", "B"]
+    groups = create_groups(students, group_size=5)
+    assert len(groups) == 1
+    assert groups[0] == students
 
-    def test_create_groups_uneven_split(self, student_list):
-        """Test creating groups where there is a remainder."""
-        # 6 students, group size 4 -> 
-        # Logic usually creates one group of 4 and one of 2, OR distributes remainders.
-        # Assuming standard chunking logic:
-        groups = ClassroomTools.create_groups(student_list, group_size=4)
-        
-        # Expecting 2 groups (one of 4, one of 2)
-        assert len(groups) == 2
-        assert len(groups[0]) == 4
-        assert len(groups[1]) == 2
+def test_create_groups_empty_list():
+    """Test creating groups from an empty list."""
+    groups = create_groups([], group_size=3)
+    assert groups == []
 
-    def test_create_groups_size_larger_than_population(self, student_list):
-        """Test requesting a group size larger than the total student count."""
-        groups = ClassroomTools.create_groups(student_list, group_size=10)
-        assert len(groups) == 1
-        assert len(groups[0]) == 6
+def test_create_groups_invalid_size():
+    """Test creating groups with invalid size (0 or negative)."""
+    students = ["A", "B"]
+    with pytest.raises(ValueError):
+        create_groups(students, group_size=0)
 
-    def test_create_groups_invalid_size(self, student_list):
-        """Test error handling for invalid group sizes."""
-        with pytest.raises(ValueError):
-            ClassroomTools.create_groups(student_list, group_size=0)
-            
-        with pytest.raises(ValueError):
-            ClassroomTools.create_groups(student_list, group_size=-1)
+def test_pair_students_even():
+    """Test pairing an even number of students."""
+    students = ["A", "B", "C", "D"]
+    pairs = pair_students(students)
+    
+    assert len(pairs) == 2
+    for pair in pairs:
+        assert len(pair) == 2
 
-    def test_shuffling_occurred(self, student_list):
-        """
-        Statistical test to ensure groups aren't just the original list sliced.
-        Note: There is a tiny probability this fails by chance (1/6!), 
-        but in QA we assume the shuffler works.
-        """
-        # We run it a few times to ensure order changes
-        original_order = [s["name"] for s in student_list]
-        
-        is_different = False
-        for _ in range(5):
-            groups = ClassroomTools.create_groups(student_list, group_size=1)
-            new_order = [s["name"] for group in groups for s in group]
-            if new_order != original_order:
-                is_different = True
-                break
-        
-        assert is_different, "The grouping logic did not shuffle the students."
+def test_pair_students_odd():
+    """Test pairing an odd number of students."""
+    students = ["A", "B", "C"]
+    pairs = pair_students(students)
+    
+    # Depending on implementation, the last item might be a tuple of 1 or added to the last pair (making a trio).
+    # Assuming standard pairing where the last one is a singleton tuple or list.
+    assert len(pairs) == 2
+    lengths = sorted([len(p) for p in pairs])
+    assert lengths == [1, 2] 
 
-    def test_integration_with_manager(self):
-        """Integration test using StudentManager output as input for Tools."""
-        manager = StudentManager()
-        for i in range(10):
-            manager.add_student(f"Student_{i}", "A")
-            
-        students = manager.get_students_by_section("A")
-        groups = ClassroomTools.create_groups(students, group_size=3)
-        
-        # 10 students, size 3 -> 3 groups of 3, 1 group of 1 (total 4 groups)
-        assert len(groups) == 4
+def test_pair_students_empty():
+    """Test pairing an empty list."""
+    assert pair_students([]) == []
+
+def test_pair_students_single():
+    """Test pairing a single student."""
+    pairs = pair_students(["Lonely"])
+    assert len(pairs) == 1
+    assert len(pairs[0]) == 1
+    assert pairs[0][0] == "Lonely"

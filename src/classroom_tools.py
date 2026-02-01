@@ -1,7 +1,7 @@
 import random
 import math
 from typing import List, Dict, Any, Optional
-from student_manager import StudentManager, Student
+from .student_manager import StudentManager, Student
 
 class ClassroomTools:
     def __init__(self, student_manager: StudentManager):

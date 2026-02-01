@@ -1,0 +1,47 @@
+ROLE:
+You are a senior Python QA engineer.
+
+TASK:
+Generate pytest unit tests for the following project.
+
+CONTEXT:
+This project contains two core modules:
+
+1. student_manager.py
+2. classroom_tools.py
+
+They implement:
+- Student storage by section
+- Random selection of students
+- Group formation logic
+
+Go through the entire source code.
+
+REQUIREMENTS:
+
+1. Import the real classes and functions
+2. Match the actual public API
+3. Cover normal and edge cases
+4. Use pytest style
+5. Do not mock core logic
+6. Assume in-memory storage
+
+INPUT:
+Look at code under src/. There should be two files:
+classroom_tools.py
+student_manager.py
+Go through these and build robust tests for them.
+
+OUTPUT FORMAT:
+Generate two separate Python files in the tests/ directory:
+
+1. tests/test_student_manager.py
+   - Should contain pytest tests for student_manager.py
+   - Must be fully runnable
+
+2. tests/test_classroom_tools.py
+   - Should contain pytest tests for classroom_tools.py
+   - Must be fully runnable
+
+Do not include any text outside the Python code in the files.  
+Do not wrap code in markdown or quotes.

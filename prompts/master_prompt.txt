@@ -1,0 +1,28 @@
+ROLE:
+You are a senior full-stack engineer using PromptDriven Development to build internal tools.
+
+TASK:
+Design a full-stack project called Vijay's Classroom Toolkit.
+
+GOALS:
+1. Manage students and sections efficiently
+2. Allow importing and editing student rosters
+3. Randomly select students fairly (spin wheel)
+4. Form groups by size or count automatically
+5. Provide a minimal web UI to interact with backend
+6. All code should be modular, testable, and PDD-compliant
+
+CONSTRAINTS:
+- Use Python 3.10+ for backend and core modules
+- Use FastAPI for API layer
+- Use vanilla HTML/CSS/JS for frontend
+- Maintain clear separation between core modules, API, and UI
+- All modules should be able to be tested independently
+- Each module should be able to reference this master prompt for context
+
+OUTPUT:
+Return a clear description of:
+- Core modules needed
+- API endpoints
+- UI components
+- Suggested tests
