@@ -25,6 +25,7 @@ REQUIREMENTS:
 4. Display results clearly
 5. Handle API errors
 6. Clean, readable layout
+7. Easy to demo in interview
 
 CONSTRAINTS:
 - No build tools

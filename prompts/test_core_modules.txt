@@ -1,0 +1,35 @@
+ROLE:
+You are a senior Python QA engineer.
+
+TASK:
+Generate pytest unit tests for the following project.
+
+CONTEXT:
+This project contains two core modules:
+
+1. student_manager.py
+2. classroom_tools.py
+
+They implement:
+- Student storage by section
+- Random selection of students
+- Group formation logic
+
+You will be given the full source code.
+
+REQUIREMENTS:
+
+1. Import the real classes and functions
+2. Match the actual public API
+3. Cover normal and edge cases
+4. Use pytest style
+5. Do not mock core logic
+6. Assume in-memory storage
+
+INPUT:
+Look at code under src/
+
+OUTPUT FORMAT:
+Return complete pytest test files:
+- test_student_manager.py
+- test_classroom_tools.py

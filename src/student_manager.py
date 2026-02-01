@@ -1,5 +1,6 @@
 import csv
 import io
+import uuid
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Set
 
@@ -45,7 +46,7 @@ class Section:
     section_id: str
     name: str
 
-class ClassroomManager:
+class StudentManager:
     """
     Manages students and sections within a school system.
     
@@ -87,14 +88,14 @@ class ClassroomManager:
         """Retrieves a section by ID."""
         return self._sections.get(section_id)
 
-    def add_student(self, name: str, student_id: str, section_id: str) -> Student:
+    def add_student(self, name: str, section_id: str, student_id: Optional[str] = None) -> Student:
         """
         Adds a new student to the system.
 
         Args:
             name (str): Student's name.
-            student_id (str): Unique student ID.
             section_id (str): ID of the section to assign.
+            student_id (Optional[str]): Unique student ID. If not provided, auto-generated.
 
         Returns:
             Student: The created student object.
@@ -103,11 +104,15 @@ class ClassroomManager:
             DuplicateStudentIdError: If student_id already exists.
             SectionNotFoundError: If section_id does not exist.
         """
+        if student_id is None:
+            student_id = str(uuid.uuid4())
+        
         if student_id in self._students:
             raise DuplicateStudentIdError(f"Student ID {student_id} already exists.")
         
+        # Create section if it doesn't exist
         if section_id not in self._sections:
-            raise SectionNotFoundError(f"Section ID {section_id} not found.")
+            self.add_section(section_id, section_id)  # Use section_id as name for simplicity
 
         new_student = Student(name=name, student_id=student_id, section_id=section_id)
         
@@ -238,7 +243,7 @@ class ClassroomManager:
 
             # Add student
             try:
-                self.add_student(stu_name, stu_id, sec_id)
+                self.add_student(stu_name, sec_id, stu_id)
                 stats['students_added'] += 1
             except DuplicateStudentIdError:
                 # In a bulk import, we might log this and continue, 

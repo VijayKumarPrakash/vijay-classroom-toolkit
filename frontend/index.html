@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vijay's Classroom Toolkit</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; }
+        h2 { font-size: 1.25rem; margin-top: 0; }
+
+        /* Grid Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box; /* Fix width issues */
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Results Area */
+        .result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            min-height: 60px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .status {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .status.error { color: var(--error); }
+        .status.success { color: var(--success); }
+
+        /* Specific Styles */
+        .wheel-result {
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Vijay's Classroom Toolkit</h1>
+        <p>Teacher Dashboard</p>
+    </header>
+
+    <div class="dashboard">
+        
+        <!-- 1. Add Student -->
+        <div class="card">
+            <h2>Add Student</h2>
+            <form id="addStudentForm">
+                <div class="form-group">
+                    <label for="studentName">Student Name</label>
+                    <input type="text" id="studentName" required placeholder="e.g. Alice Smith">
+                </div>
+                <div class="form-group">
+                    <label for="studentSection">Section ID</label>
+                    <input type="text" id="studentSection" required placeholder="e.g. MATH101">
+                </div>
+                <button type="submit">Add Student</button>
+                <div id="addStudentStatus" class="status"></div>
+            </form>
+        </div>
+
+        <!-- 2. View Roster -->
+        <div class="card">
+            <h2>View Roster</h2>
+            <form id="viewRosterForm">
+                <div class="form-group">
+                    <label for="rosterSectionId">Section ID</label>
+                    <input type="text" id="rosterSectionId" required placeholder="e.g. MATH101">
+                </div>
+                <button type="submit">Get Roster</button>
+            </form>
+            <div id="rosterResult" class="result-box">No roster loaded.</div>
+        </div>
+
+        <!-- 3. Spin the Wheel -->
+        <div class="card">
+            <h2>Spin the Wheel</h2>
+            <p style="font-size: 0.875rem; color: #666;">Pick a random student from a section.</p>
+            <form id="spinWheelForm">
+                <div class="form-group">
+                    <label for="spinSectionId">Section ID</label>
+                    <input type="text" id="spinSectionId" required placeholder="e.g. MATH101">
+                </div>
+                <button type="submit">Spin!</button>
+            </form>
+            <div id="spinResult" class="result-box wheel-result">?</div>
+        </div>
+
+        <!-- 4. Create Groups -->
+        <div class="card">
+            <h2>Create Groups</h2>
+            <form id="createGroupsForm">
+                <div class="form-group">
+                    <label for="groupSectionId">Section ID</label>
+                    <input type="text" id="groupSectionId" required placeholder="e.g. MATH101">
+                </div>
+                <div class="form-group">
+                    <label for="groupSize">Group Size</label>
+                    <input type="number" id="groupSize" required min="2" value="3">
+                </div>
+                <button type="submit">Generate Groups</button>
+            </form>
+            <div id="groupsResult" class="result-box">No groups generated.</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Configuration
+    const API_BASE = 'http://127.0.0.1:8000';
+
+    // Helper: Generic Fetch Wrapper
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+        };
+        if (body) options.body = JSON.stringify(body);
+
+        try {
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.detail || 'API Error');
+            }
+            return data;
+        } catch (error) {
+            console.error("API Error:", error);
+            throw error;
+        }
+    }
+
+    // 1. Add Student Handler
+    document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const statusEl = document.getElementById('addStudentStatus');
+        const name = document.getElementById('studentName').value;
+        const section_id = document.getElementById('studentSection').value;
+
+        statusEl.textContent = 'Adding...';
+        statusEl.className = 'status';
+
+        try {
+            // Assuming POST /students expects { name: "...", section_id: "..." }
+            await apiCall('/students', 'POST', { name, section_id });
+            statusEl.textContent = `Success: Added ${name} to ${section_id}`;
+            statusEl.className = 'status success';
+            document.getElementById('studentName').value = ''; // Clear name only
+        } catch (err) {
+            statusEl.textContent = `Error: ${err.message}`;
+            statusEl.className = 'status error';
+        }
+    });
+
+    // 2. View Roster Handler
+    document.getElementById('viewRosterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const resultEl = document.getElementById('rosterResult');
+        const sectionId = document.getElementById('rosterSectionId').value;
+
+        resultEl.textContent = 'Loading...';
+
+        try {
+            const data = await apiCall(`/sections/${sectionId}`, 'GET');
+            // Format JSON for display
+            if (Array.isArray(data) && data.length === 0) {
+                resultEl.textContent = "Section is empty.";
+            } else {
+                // Pretty print the JSON result
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            }
+        } catch (err) {
+            resultEl.textContent = `Error loading roster: ${err.message}`;
+        }
+    });
+
+    // 3. Spin Wheel Handler
+    document.getElementById('spinWheelForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const resultEl = document.getElementById('spinResult');
+        const sectionId = document.getElementById('spinSectionId').value;
+        const btn = e.target.querySelector('button');
+
+        // UI Animation effect
+        btn.disabled = true;
+        let counter = 0;
+        const interval = setInterval(() => {
+            resultEl.textContent = ['Thinking...', 'Spinning...', 'Choosing...'][counter % 3];
+            counter++;
+        }, 150);
+
+        try {
+            // Assuming POST /spin/{section_id} returns { student: "Name" } or similar
+            const data = await apiCall(`/spin/${sectionId}`, 'POST');
+            
+            clearInterval(interval);
+            // Adjust based on actual API response structure. 
+            // If API returns object { name: "Alice" }, use data.name. If string, use data.
+            const winner = data.name || data.student || JSON.stringify(data);
+            resultEl.textContent = `🎉 ${winner} 🎉`;
+        } catch (err) {
+            clearInterval(interval);
+            resultEl.textContent = "Error";
+            alert(err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // 4. Create Groups Handler
+    document.getElementById('createGroupsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const resultEl = document.getElementById('groupsResult');
+        const section_id = document.getElementById('groupSectionId').value;
+        const group_size = parseInt(document.getElementById('groupSize').value);
+
+        resultEl.textContent = 'Generating groups...';
+
+        try {
+            // Assuming POST /groups expects { section_id: "...", group_size: 3 }
+            const data = await apiCall('/groups', 'POST', { section_id, group_size });
+            
+            // Format output nicely
+            // Assuming data is [[student1, student2], [student3, student4]]
+            if (Array.isArray(data)) {
+                let html = '';
+                data.forEach((group, index) => {
+                    // Handle if group contains objects or strings
+                    const names = group.map(s => (typeof s === 'object' ? s.name : s)).join(', ');
+                    html += `Group ${index + 1}: ${names}\n`;
+                });
+                resultEl.textContent = html;
+            } else {
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            }
+        } catch (err) {
+            resultEl.textContent = `Error: ${err.message}`;
+        }
+    });
+</script>
+
+</body>
+</html>

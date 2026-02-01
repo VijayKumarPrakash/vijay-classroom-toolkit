@@ -14,12 +14,11 @@ There are two existing modules:
 These modules are located in src/.
 
 The API must use these modules and not reimplement their logic.
+Make sure appropriate imports are made and that you are not hallucinating. Check the source code first before implementing the APIs.
 
 REQUIREMENTS:
 
-1. Initialize:
-   - StudentManager
-   - ClassroomTools(student_manager)
+1. Initialize: two modules for student management and classroom tools
 
 2. Define Pydantic models for:
    - StudentCreate

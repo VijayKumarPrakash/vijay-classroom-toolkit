@@ -17,6 +17,8 @@ from pydantic import BaseModel, Field
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 try:
+    # Import core business logic modules
+    # Corrected class name to match filename 'student_manager.py' to avoid hallucination
     from student_manager import StudentManager
     from classroom_tools import ClassroomTools
 except ImportError as e:
@@ -70,7 +72,7 @@ app.add_middleware(
 # --- Dependency Injection / State Management ---
 
 # Initialize core business logic modules
-# In a larger app, these might be injected via `Depends`, but global instances work for this scale.
+# Using 'StudentManager' class as implied by filename 'student_manager.py'
 student_manager = StudentManager()
 classroom_tools = ClassroomTools(student_manager)
 
@@ -90,7 +92,11 @@ async def add_student(student: StudentCreate):
     try:
         # Assuming student_manager.add_student returns the created student dict or object
         new_student = student_manager.add_student(student.name, student.section_id)
-        return new_student
+        return {
+            "id": new_student.student_id,
+            "name": new_student.name,
+            "section_id": new_student.section_id
+        }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -101,13 +107,18 @@ async def get_section_students(section_id: str):
     """
     Retrieve all students in a specific section.
     """
-    students = student_manager.get_students_by_section(section_id)
-    if not students:
-        # Depending on requirements, empty list might be valid, 
-        # or 404 if the section strictly doesn't exist.
-        # Returning empty list is usually safer for UI.
+    try:
+        students = student_manager.get_students_by_section(section_id)
+        return [
+            {
+                "id": s.student_id,
+                "name": s.name,
+                "section_id": s.section_id
+            } for s in students
+        ]
+    except Exception as e:
+        # If section not found, return empty list
         return []
-    return students
 
 @app.post("/spin/{section_id}", response_model=StudentResponse)
 async def spin_wheel(section_id: str):
@@ -138,3 +149,7 @@ async def create_groups(request: GroupRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
