@@ -6,25 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 # --- Import Path Configuration ---
-# Ensure the 'src' directory is in the python path so we can import modules
-# Assuming the structure is:
-# /project_root
-#   /backend
-#     main.py
-#   /src
-#     student_manager.py
-#     classroom_tools.py
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add project root to path so we can import the src package
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-try:
-    # Import core business logic modules
-    # Corrected class name to match filename 'student_manager.py' to avoid hallucination
-    from student_manager import StudentManager
-    from classroom_tools import ClassroomTools
-except ImportError as e:
-    print(f"Error importing core modules: {e}")
-    print("Please ensure 'student_manager.py' and 'classroom_tools.py' exist in the '../src' directory.")
-    sys.exit(1)
+from src.student_manager import StudentManager
+from src.classroom_tools import ClassroomTools
 
 # --- Pydantic Models ---
 
