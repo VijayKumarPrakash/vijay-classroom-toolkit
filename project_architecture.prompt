@@ -1,0 +1,301 @@
+# Project Architecture: vijay-classroom-toolkit
+
+A full-stack web application for classroom management, enabling Teaching Assistants to manage students, randomly select participants, and form discussion groups.
+
+---
+
+## Directory Structure
+
+```
+vijay-classroom-toolkit/
+├── backend/                          # FastAPI backend server
+│   └── main.py                       # FastAPI application entry point
+├── src/                              # Core business logic modules
+│   ├── __init__.py                   # Package initialization
+│   ├── student_manager.py            # Student and section management
+│   └── classroom_tools.py            # Classroom utilities (spin wheel, grouping)
+├── frontend/                         # Frontend UI
+│   └── index.html                    # Single-page application (HTML/CSS/JS)
+├── tests/                            # Test suite
+│   ├── test_student_manager.py       # Tests for StudentManager class
+│   ├── test_classroom_tools.py       # Tests for ClassroomTools class
+├── prompts/                          # PDD (PromptDrivenDevelopment) prompt files
+│   ├── master_prompt.txt             # Main project prompt
+│   ├── student_manager.txt           # StudentManager requirements
+│   ├── classroom_tools.txt           # ClassroomTools requirements
+│   ├── api_backend.txt               # Backend API requirements
+│   ├── frontend_ui.txt               # Frontend requirements
+│   └── test_core_modules.txt         # Testing requirements
+├── transcripts/                      # PDD session transcripts
+├── docs/                             # Documentation
+├── .pdd/                             # PDD metadata and core dumps
+├── pyproject.toml                    # Python project configuration
+├── .pddrc                            # PDD configuration
+├── README.md                         # Project README
+├── REFERENCES.md                     # References and credits
+└── .gitignore                        # Git ignore patterns
+```
+
+---
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────┐
+│        frontend/index.html          │
+│     (Single-page app, vanilla JS)   │
+│  ┌──────────────────────────────┐   │
+│  │       4 Feature Cards        │   │
+│  │  - Add Student               │   │
+│  │  - View Roster               │   │
+│  │  - Spin Wheel                │   │
+│  │  - Create Groups             │   │
+│  └──────────────────────────────┘   │
+└──────────────┬──────────────────────┘
+               │ HTTP (Fetch API)
+               ▼
+┌─────────────────────────────────────┐
+│   backend/main.py (FastAPI Server)  │
+│   Port: 8000                        │
+│  ┌──────────────────────────────┐   │
+│  │ Endpoints:                   │   │
+│  │ POST   /students             │   │
+│  │ GET    /sections/{id}        │   │
+│  │ POST   /spin/{id}            │   │
+│  │ POST   /groups               │   │
+│  └──────────────────────────────┘   │
+└──────────────┬──────────────────────┘
+               │ Dependency Injection
+               ▼
+┌─────────────────────────────────────┐
+│          src/ (Core Modules)        │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │  ClassroomTools               │  │
+│  │  (classroom_tools.py)         │  │
+│  │  - spin_wheel()               │  │
+│  │  - create_groups()            │  │
+│  └───────────────┬───────────────┘  │
+│                  │ Uses             │
+│  ┌───────────────▼───────────────┐  │
+│  │  StudentManager               │  │
+│  │  (student_manager.py)         │  │
+│  │  - add_student()              │  │
+│  │  - remove_student()           │  │
+│  │  - update_student()           │  │
+│  │  - get_students_by_section()  │  │
+│  │  - import_roster_from_csv()   │  │
+│  │                               │  │
+│  │  In-Memory Storage:           │  │
+│  │  - _students: Dict[id,Student]│  │
+│  │  - _sections: Dict[id,Section]│  │
+│  │  - _section_roster_index      │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Core Modules
+
+### 1. StudentManager (src/student_manager.py)
+
+Central repository for student and section data management.
+
+**Exceptions:**
+- `StudentManagerError` - Base exception
+- `DuplicateStudentIdError` - Raised when adding duplicate student ID
+- `SectionNotFoundError` - Raised when section doesn't exist
+- `StudentNotFoundError` - Raised when student doesn't exist
+
+**Data Classes:**
+```python
+@dataclass
+class Student:
+    name: str           # Student's full name
+    student_id: str     # Unique identifier (auto-generated UUID if not provided)
+    section_id: str     # Reference to parent section
+
+@dataclass
+class Section:
+    section_id: str     # Unique identifier for section
+    name: str           # Human-readable name (e.g., "Math 101")
+```
+
+**Methods:**
+| Method | Description |
+|--------|-------------|
+| `add_section(section_id, name)` | Create or update a section |
+| `get_section(section_id)` | Retrieve section by ID |
+| `add_student(name, section_id, student_id=None)` | Add student with optional auto-generated ID |
+| `remove_student(student_id)` | Remove student from system |
+| `update_student(student_id, name=None, section_id=None)` | Update student details |
+| `get_students_by_section(section_id)` | Retrieve all students in a section |
+| `import_roster_from_csv(csv_text)` | Bulk import from CSV format |
+
+**Key Features:**
+- Maintains referential integrity between students and sections
+- Section roster index for O(1) lookups by section
+- Auto-creates sections when adding students to non-existent sections
+- CSV import format: `section_id,section_name,student_id,student_name`
+
+---
+
+### 2. ClassroomTools (src/classroom_tools.py)
+
+Interactive classroom utilities for teaching.
+
+**Constructor:**
+```python
+ClassroomTools(student_manager: StudentManager)
+```
+
+**Methods:**
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `spin_wheel(section_id)` | Randomly select one student from section | `{id, name, section_id}` or `None` |
+| `create_groups(section_id, group_size)` | Partition students into groups | `List[List[Dict]]` |
+
+**Key Features:**
+- Uses `random.choice()` for unbiased selection
+- Shuffles students before grouping for randomness
+- Returns `None`/empty list on errors (doesn't raise exceptions)
+
+---
+
+## API Endpoints
+
+**Base URL:** `http://127.0.0.1:8000`
+**CORS Enabled:** localhost, localhost:3000, localhost:8000, 127.0.0.1:3000
+
+| Method | Endpoint | Purpose | Request Body | Response |
+|--------|----------|---------|--------------|----------|
+| GET | `/` | Health check | N/A | `{"message": "...running"}` |
+| POST | `/students` | Add student | `{name, section_id}` | `{id, name, section_id}` |
+| GET | `/sections/{section_id}` | Get roster | N/A | `[{id, name, section_id}, ...]` |
+| POST | `/spin/{section_id}` | Random select | N/A | `{id, name, section_id}` |
+| POST | `/groups` | Create groups | `{section_id, group_size}` | `[[{id, name, section_id}, ...], ...]` |
+
+**Pydantic Models:**
+- `StudentCreate`: `{name: str, section_id: str}`
+- `StudentResponse`: `{id: str, name: str, section_id: str}`
+- `GroupRequest`: `{section_id: str, group_size: int}`
+
+---
+
+## Frontend (frontend/index.html)
+
+Single-page application with 4 feature cards:
+
+1. **Add Student Card** - Form to add students to sections
+2. **View Roster Card** - Display students in a section
+3. **Spin the Wheel Card** - Random student selection with animation
+4. **Create Groups Card** - Partition section into groups
+
+**Tech Stack:**
+- Vanilla HTML5, CSS3, JavaScript (ES6)
+- No build tools or external libraries
+- Fetch API for HTTP calls
+- CSS variables for theming
+- Responsive grid layout
+
+---
+
+## Dependencies
+
+**Python (Core Modules - Standard Library Only):**
+- `csv`, `io` - CSV import
+- `uuid` - Auto-ID generation
+- `dataclasses` - Data models
+- `typing` - Type hints
+- `random`, `math` - Randomization
+
+**Python (Backend):**
+- `fastapi` - Web framework
+- `pydantic` - Data validation
+- `uvicorn` - ASGI server
+
+**Testing:**
+- `pytest` - Test framework
+
+**Python Version:** 3.12+
+
+---
+
+## Testing Structure
+
+**Test Framework:** pytest (34 total tests)
+
+**test_student_manager.py (19 tests):**
+- `TestAddSection` - Section creation/update
+- `TestAddStudent` - Student creation, auto-ID, duplicate handling
+- `TestRemoveStudent` - Student deletion
+- `TestUpdateStudent` - Name/section updates
+- `TestGetStudentsBySection` - Roster retrieval
+- `TestImportRosterFromCSV` - Bulk import
+
+**test_classroom_tools.py (15 tests):**
+- `TestSpinWheel` - Random selection edge cases
+- `TestCreateGroups` - Grouping with various sizes and distributions
+
+**Running Tests:**
+```bash
+pytest tests/
+pytest tests/test_student_manager.py -v
+pytest tests/test_classroom_tools.py -v
+```
+
+---
+
+## Data Flow Example
+
+```
+1. User submits "Create Groups" form in frontend
+2. JavaScript sends POST /groups with {section_id, group_size}
+3. FastAPI receives request
+4. Backend calls classroom_tools.create_groups()
+5. ClassroomTools calls student_manager.get_students_by_section()
+6. StudentManager returns List[Student] from internal dict
+7. ClassroomTools shuffles and partitions into groups
+8. Returns List[List[Dict]] to API
+9. API converts to Pydantic response models
+10. Frontend receives JSON and displays groups
+```
+
+---
+
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `pyproject.toml` | Python project metadata, pytest config |
+| `.pddrc` | PDD workflow configuration |
+| `.gitignore` | Git exclusions |
+
+---
+
+## Key Characteristics
+
+- **Architecture:** Modular separation (core logic / API / UI)
+- **Data Storage:** In-memory only (data lost on restart)
+- **Test Coverage:** Comprehensive (34 test cases)
+- **Development Workflow:** PromptDriven Development (PDD)
+- **Use Case:** TA tool for classroom management
+
+---
+
+## Quick Start
+
+```bash
+# Install dependencies
+pip install fastapi uvicorn
+
+# Run backend
+cd backend && uvicorn main:app --reload
+
+# Open frontend
+open frontend/index.html
+
+# Run tests
+pytest tests/ -v
+```

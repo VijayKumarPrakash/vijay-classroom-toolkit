@@ -1,0 +1,199 @@
+{
+  "project": {
+    "name": "vijay-classroom-toolkit",
+    "description": "A full-stack web application for classroom management, enabling Teaching Assistants to manage students, randomly select participants, and form discussion groups.",
+    "python_version": "3.12+",
+    "type": "full-stack-web-application"
+  },
+  "directory_structure": [
+    {
+      "path": "backend",
+      "description": "FastAPI backend server",
+      "files": [
+        {"name": "main.py", "description": "FastAPI application entry point"}
+      ]
+    },
+    {
+      "path": "src",
+      "description": "Core business logic modules",
+      "files": [
+        {"name": "__init__.py", "description": "Package initialization"},
+        {"name": "student_manager.py", "description": "Student and section management"},
+        {"name": "classroom_tools.py", "description": "Classroom utilities (spin wheel, grouping)"}
+      ]
+    },
+    {
+      "path": "frontend",
+      "description": "Frontend UI",
+      "files": [
+        {"name": "index.html", "description": "Single-page application (HTML/CSS/JS)"}
+      ]
+    },
+    {
+      "path": "tests",
+      "description": "Test suite",
+      "files": [
+        {"name": "test_student_manager.py", "description": "Tests for StudentManager class"},
+        {"name": "test_classroom_tools.py", "description": "Tests for ClassroomTools class"}
+      ]
+    },
+    {
+      "path": "prompts",
+      "description": "PDD (PromptDrivenDevelopment) prompt files",
+      "files": [
+        {"name": "master_prompt.txt", "description": "Main project prompt"},
+        {"name": "student_manager.txt", "description": "StudentManager requirements"},
+        {"name": "classroom_tools.txt", "description": "ClassroomTools requirements"},
+        {"name": "api_backend.txt", "description": "Backend API requirements"},
+        {"name": "frontend_ui.txt", "description": "Frontend requirements"},
+        {"name": "test_core_modules.txt", "description": "Testing requirements"}
+      ]
+    },
+    {
+      "path": "transcripts",
+      "description": "PDD session transcripts",
+      "files": []
+    },
+    {
+      "path": "docs",
+      "description": "Documentation",
+      "files": []
+    }
+  ],
+  "modules": [
+    {
+      "name": "student_manager",
+      "path": "src/student_manager.py",
+      "description": "Central repository for student and section data management",
+      "exceptions": [
+        {"name": "StudentManagerError", "description": "Base exception"},
+        {"name": "DuplicateStudentIdError", "description": "Raised when adding duplicate student ID"},
+        {"name": "SectionNotFoundError", "description": "Raised when section doesn't exist"},
+        {"name": "StudentNotFoundError", "description": "Raised when student doesn't exist"}
+      ],
+      "data_classes": [
+        {
+          "name": "Student",
+          "fields": [
+            {"name": "name", "type": "str", "description": "Student's full name"},
+            {"name": "student_id", "type": "str", "description": "Unique identifier (auto-generated UUID if not provided)"},
+            {"name": "section_id", "type": "str", "description": "Reference to parent section"}
+          ]
+        },
+        {
+          "name": "Section",
+          "fields": [
+            {"name": "section_id", "type": "str", "description": "Unique identifier for section"},
+            {"name": "name", "type": "str", "description": "Human-readable name (e.g., 'Math 101')"}
+          ]
+        }
+      ],
+      "methods": [
+        {"name": "add_section", "signature": "add_section(section_id, name)", "description": "Create or update a section"},
+        {"name": "get_section", "signature": "get_section(section_id)", "description": "Retrieve section by ID"},
+        {"name": "add_student", "signature": "add_student(name, section_id, student_id=None)", "description": "Add student with optional auto-generated ID"},
+        {"name": "remove_student", "signature": "remove_student(student_id)", "description": "Remove student from system"},
+        {"name": "update_student", "signature": "update_student(student_id, name=None, section_id=None)", "description": "Update student details"},
+        {"name": "get_students_by_section", "signature": "get_students_by_section(section_id)", "description": "Retrieve all students in a section"},
+        {"name": "import_roster_from_csv", "signature": "import_roster_from_csv(csv_text)", "description": "Bulk import from CSV format"}
+      ],
+      "internal_storage": [
+        {"name": "_students", "type": "Dict[str, Student]", "description": "Maps student_id -> Student object"},
+        {"name": "_sections", "type": "Dict[str, Section]", "description": "Maps section_id -> Section object"},
+        {"name": "_section_roster_index", "type": "Dict[str, Set[str]]", "description": "Maps section_id -> Set of student_ids"}
+      ]
+    },
+    {
+      "name": "classroom_tools",
+      "path": "src/classroom_tools.py",
+      "description": "Interactive classroom utilities for teaching",
+      "dependencies": ["student_manager"],
+      "constructor": "ClassroomTools(student_manager: StudentManager)",
+      "methods": [
+        {"name": "spin_wheel", "signature": "spin_wheel(section_id)", "description": "Randomly select one student from section", "returns": "{id, name, section_id} or None"},
+        {"name": "create_groups", "signature": "create_groups(section_id, group_size)", "description": "Partition students into groups", "returns": "List[List[Dict]]"}
+      ]
+    }
+  ],
+  "api": {
+    "framework": "FastAPI",
+    "base_url": "http://127.0.0.1:8000",
+    "cors_origins": ["localhost", "localhost:3000", "localhost:8000", "127.0.0.1:3000"],
+    "endpoints": [
+      {"method": "GET", "path": "/", "purpose": "Health check", "request_body": null, "response": "{'message': 'string'}"},
+      {"method": "POST", "path": "/students", "purpose": "Add student", "request_body": "{'name': 'string', 'section_id': 'string'}", "response": "{'id': 'string', 'name': 'string', 'section_id': 'string'}"},
+      {"method": "GET", "path": "/sections/{section_id}", "purpose": "Get roster", "request_body": null, "response": "[{'id': 'string', 'name': 'string', 'section_id': 'string'}]"},
+      {"method": "POST", "path": "/spin/{section_id}", "purpose": "Random select student", "request_body": null, "response": "{'id': 'string', 'name': 'string', 'section_id': 'string'}"},
+      {"method": "POST", "path": "/groups", "purpose": "Create groups", "request_body": "{'section_id': 'string', 'group_size': 'integer'}", "response": "[[{'id': 'string', 'name': 'string', 'section_id': 'string'}]]"}
+    ],
+    "pydantic_models": [
+      {"name": "StudentCreate", "fields": [{"name": "name", "type": "str"}, {"name": "section_id", "type": "str"}]},
+      {"name": "StudentResponse", "fields": [{"name": "id", "type": "str"}, {"name": "name", "type": "str"}, {"name": "section_id", "type": "str"}]},
+      {"name": "GroupRequest", "fields": [{"name": "section_id", "type": "str"}, {"name": "group_size", "type": "int"}]}
+    ]
+  },
+  "frontend": {
+    "path": "frontend/index.html",
+    "type": "single-page-application",
+    "tech_stack": [
+      {"name": "html", "version": "HTML5"},
+      {"name": "css", "version": "CSS3 with CSS variables"},
+      {"name": "javascript", "version": "Vanilla ES6"},
+      {"name": "http_client", "version": "Fetch API"}
+    ],
+    "features": [
+      {"name": "Add Student", "description": "Form to add students to sections", "api_endpoint": "POST /students"},
+      {"name": "View Roster", "description": "Display students in a section", "api_endpoint": "GET /sections/{section_id}"},
+      {"name": "Spin the Wheel", "description": "Random student selection with animation", "api_endpoint": "POST /spin/{section_id}"},
+      {"name": "Create Groups", "description": "Partition section into groups", "api_endpoint": "POST /groups"}
+    ]
+  },
+  "dependencies": [
+    {"category": "core_modules", "type": "standard_library_only", "packages": ["csv", "io", "uuid", "dataclasses", "typing", "random", "math"]},
+    {"category": "backend", "packages": [{"name": "fastapi", "description": "Web framework"}, {"name": "pydantic", "description": "Data validation"}, {"name": "uvicorn", "description": "ASGI server"}]},
+    {"category": "testing", "packages": [{"name": "pytest", "description": "Test framework"}]}
+  ],
+  "testing": {
+    "framework": "pytest",
+    "total_tests": 34,
+    "run_command": "pytest tests/ -v",
+    "test_files": [
+      {
+        "path": "tests/test_student_manager.py",
+        "test_count": 19,
+        "test_classes": [
+          {"name": "TestAddSection", "tests": 2},
+          {"name": "TestAddStudent", "tests": 4},
+          {"name": "TestRemoveStudent", "tests": 2},
+          {"name": "TestUpdateStudent", "tests": 4},
+          {"name": "TestGetStudentsBySection", "tests": 4},
+          {"name": "TestImportRosterFromCSV", "tests": 3}
+        ]
+      },
+      {
+        "path": "tests/test_classroom_tools.py",
+        "test_count": 15,
+        "test_classes": [
+          {"name": "TestSpinWheel", "tests": 4},
+          {"name": "TestCreateGroups", "tests": 11}
+        ]
+      }
+    ]
+  },
+  "data_storage": {
+    "type": "in-memory",
+    "persistence": false,
+    "note": "Data is lost on server restart"
+  },
+  "configuration_files": [
+    {"name": "pyproject.toml", "description": "Python project metadata, pytest config"},
+    {"name": ".pddrc", "description": "PDD workflow configuration"},
+    {"name": ".gitignore", "description": "Git exclusions"}
+  ],
+  "quick_start": {
+    "install": "pip install fastapi uvicorn",
+    "run_backend": "cd backend && uvicorn main:app --reload",
+    "run_frontend": "open frontend/index.html",
+    "run_tests": "pytest tests/ -v"
+  }
+}
