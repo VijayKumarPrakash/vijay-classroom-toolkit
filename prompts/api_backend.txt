@@ -1,0 +1,55 @@
+ROLE:
+You are a senior backend engineer specializing in FastAPI and clean architecture.
+
+TASK:
+Generate a FastAPI backend called main.py for Vijay's Classroom Toolkit.
+Fix import paths for necessary modules
+
+
+SYSTEM CONTEXT:
+There are two existing modules:
+- student_manager.py (manages students and sections)
+- classroom_tools.py (implements spin wheel and grouping)
+
+These modules are located in src/.
+
+The API must use these modules and not reimplement their logic.
+
+REQUIREMENTS:
+
+1. Initialize:
+   - StudentManager
+   - ClassroomTools(student_manager)
+
+2. Define Pydantic models for:
+   - StudentCreate
+   - GroupRequest
+
+3. Expose endpoints:
+
+   POST /students
+     Add a student
+
+   GET /sections/{section_id}
+     Return students in section
+
+   POST /spin/{section_id}
+     Randomly select student
+
+   POST /groups
+     Create groups
+
+4. Handle errors with HTTPException
+
+5. Enable CORS for localhost frontend
+
+6. Include docstrings and comments
+
+CONSTRAINTS:
+- Python 3.10+
+- Use FastAPI
+- No external business logic
+- Clean modular structure
+
+OUTPUT FORMAT:
+Return only valid Python code for backend/main.py.

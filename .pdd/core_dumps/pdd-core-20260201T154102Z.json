@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "pdd_version": "0.0.135",
+  "timestamp_utc": "20260201T154102Z",
+  "argv": [
+    "auth",
+    "logout"
+  ],
+  "cwd": "/Users/vkp/dev/vijay-classroom-toolkit",
+  "platform": {
+    "system": "Darwin",
+    "release": "25.2.0",
+    "version": "Darwin Kernel Version 25.2.0: Tue Nov 18 21:09:34 PST 2025; root:xnu-12377.61.12~1/RELEASE_ARM64_T8112",
+    "python": "3.12.12 (main, Oct  9 2025, 11:07:00) [Clang 17.0.0 (clang-1700.6.3.2)]"
+  },
+  "global_options": {
+    "force": false,
+    "strength": null,
+    "temperature": null,
+    "time": 0.25,
+    "verbose": false,
+    "quiet": false,
+    "local": false,
+    "context": null,
+    "output_cost": null,
+    "review_examples": false
+  },
+  "invoked_subcommands": [],
+  "total_cost": 0.0,
+  "steps": [],
+  "errors": [],
+  "environment": {
+    "PATH": "/opt/homebrew/opt/python@3.12/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/pmk/env/global/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/Users/vkp/.local/bin",
+    "PDD_PATH": "/Users/vkp/.local/share/uv/tools/pdd-cli/lib/python3.12/site-packages/pdd"
+  },
+  "file_contents": {},
+  "terminal_output": "=== STDOUT ===\nChecking for updates...\nLogged out of PDD Cloud.\n\n--- Command Execution Summary ---\n-------------------------------------\n"
+}

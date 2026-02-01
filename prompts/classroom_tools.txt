@@ -1,0 +1,21 @@
+ROLE:
+You are a senior Python engineer building classroom managment tools that a Teachnig Assistant can use during discussion section
+
+TASK:
+Generate a Python module called classroom_tools.py that provides random selection and grouping tools.
+
+REQUIREMENTS:
+- Import student_manager
+- Implement:
+  - spin_wheel(section_id)
+  - form_groups_by_size(section_id, group_size) - create groups based on team size specified - obviously one group may not have full strength
+  - form_groups_by_count(section_id, num_groups) - distribute students as evenly as possible to get the number of groups specified
+- Return structured outputs
+
+CONSTRAINTS:
+- Must use student_manager APIs
+- Python 3.10+
+- No external libraries
+
+OUTPUT:
+Return only valid Python code.

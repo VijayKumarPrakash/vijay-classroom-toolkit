@@ -1,0 +1,28 @@
+ROLE:
+You are a senior Python backend engineer.
+
+TASK:
+Generate a Python module called student_manager.py that manages classroom students and sections.
+
+REQUIREMENTS:
+- Define Student and Section classes
+- Each Student has: name, student_id, section_id
+- Each Section has: section_id, name
+- Sections are the primary mode of entry for other things in the system, as in we will be building out modules later where we will be required to pick a section so the tasks are run on those students only
+- Support CRUD operations:
+  - add_student
+  - remove_student
+  - update_student
+  - get_students_by_section
+- Support importing roster from CSV text
+- Validate duplicate student IDs
+- Use type hints
+- Include docstrings
+
+CONSTRAINTS:
+- Python 3.10+
+- No external dependencies
+- Clean, modular design
+
+OUTPUT:
+Return only valid Python code.

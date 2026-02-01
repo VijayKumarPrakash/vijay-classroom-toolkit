@@ -1,0 +1,35 @@
+ROLE:
+You are a senior frontend engineer specializing in simple, maintainable dashboards.
+
+TASK:
+Generate a minimal web-based UI for Vijay's Classroom Toolkit.
+
+SYSTEM CONTEXT:
+There is a FastAPI backend running at http://127.0.0.1:8000
+
+Available endpoints:
+- POST /students
+- GET /sections/{section_id}
+- POST /spin/{section_id}
+- POST /groups
+
+REQUIREMENTS:
+
+1. Single-page HTML application
+2. Use vanilla JavaScript (no frameworks)
+3. Provide forms for:
+   - Adding students
+   - Viewing section rosters
+   - Spinning wheel
+   - Creating groups
+4. Display results clearly
+5. Handle API errors
+6. Clean, readable layout
+
+CONSTRAINTS:
+- No build tools
+- No external libraries
+- Works by opening file in browser
+
+OUTPUT FORMAT:
+Return a complete index.html file.
